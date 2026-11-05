@@ -100,6 +100,18 @@ h2 { font-family: var(--display); font-weight: 800; text-transform: uppercase; f
 .filters button { font: 500 12px var(--body); letter-spacing: .1em; text-transform: uppercase; background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 8px 12px; cursor: pointer; }
 .filters button[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 
+.more { margin-top: 20px; font: 600 13px var(--body); letter-spacing: .08em; text-transform: uppercase; background: transparent; color: var(--fg); border: 1px solid var(--fg); padding: 12px 18px; cursor: pointer; }
+@media (max-width: 600px) {
+  .rel { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .cover { padding: 10px; }
+  .cover .t { font-size: 20px; }
+  .cover .n { font-size: 9px; }
+  .rel h3 { font-size: 13px; margin-top: 6px; }
+  .rel p { font-size: 11px; }
+  .filters { flex-wrap: nowrap; overflow-x: auto; margin-inline: -4px; padding: 0 4px 6px; scrollbar-width: none; }
+  .filters button { flex: 0 0 auto; }
+}
+
 /* Watch */
 .watch { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
 .watch a { display: flex; flex-direction: column; gap: 6px; padding: 18px; border: 1px solid var(--line); background: var(--panel); text-decoration: none; }
@@ -279,6 +291,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
           <span class="pill out">Out now</span>
         </article>
       </div>
+      <button type="button" class="more" id="rel-more">Show all releases</button>
     </div>
   </section>
 
@@ -490,12 +503,22 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 
 <script>
 (function(){
-  var btns=document.querySelectorAll('.filters button'), items=document.querySelectorAll('.rel article');
+  var LIMIT=6, f='all', expanded=false;
+  var btns=document.querySelectorAll('.filters button'), items=[].slice.call(document.querySelectorAll('.rel article')), more=document.getElementById('rel-more');
+  function match(it){ return f==='all' || it.getAttribute('data-artist')===f || (f==='out' && it.querySelector('.pill.out')); }
+  function render(){
+    var shown=0, total=0;
+    items.forEach(function(it){ var m=match(it); if(m) total++; it.hidden = !m || (!expanded && shown>=LIMIT); if(m && !it.hidden) shown++; });
+    more.hidden = total<=LIMIT;
+    more.textContent = expanded ? 'Show fewer' : 'Show all ' + total + ' releases';
+  }
   btns.forEach(function(b){ b.addEventListener('click',function(){
-    var f=b.getAttribute('data-f');
+    f=b.getAttribute('data-f'); expanded=false;
     btns.forEach(function(x){ x.setAttribute('aria-pressed', x===b?'true':'false'); });
-    items.forEach(function(it){ it.hidden = !(f==='all' || it.getAttribute('data-artist')===f || (f==='out' && it.querySelector('.pill.out'))); });
+    render();
   });});
+  more.addEventListener('click',function(){ expanded=!expanded; render(); if(!expanded) document.getElementById('releases').scrollIntoView(); });
+  render();
 })();
 </script>
 </body>
